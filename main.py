@@ -1,9 +1,12 @@
-from PIL import Image, ImageDraw, ImageFont
 import pandas as pd
 import os
-from PyQt5 import QtCore, QtGui, QtWidgets
-from fpdf import FPDF
 import datetime
+
+import docx
+from docx.shared import Inches, Cm
+
+from PIL import Image, ImageDraw, ImageFont
+from PyQt5 import QtCore, QtGui, QtWidgets
 from qt_material import apply_stylesheet
 
 
@@ -52,7 +55,7 @@ class Ui_mainWindow(QtWidgets.QMainWindow):
         mainWindow.setWindowTitle(_translate("mainWindow", "Генератор дипломов"))
         self.pushButton.setText(_translate("mainWindow", "Создать"))
         self.text_status.setText(_translate("mainWindow", "Жду задания!"))
-        self.checkpdf.setText(_translate("mainWindow", "Создать pdf файл с дипломами"))
+        self.checkpdf.setText(_translate("mainWindow", "Создать docx файл с дипломами"))
         list1 = [
             self.tr('VR'),
             self.tr('MR'),
@@ -64,11 +67,11 @@ class Ui_mainWindow(QtWidgets.QMainWindow):
         self.comboBox.addItems(list1)
         self.pushButton.clicked.connect(self.create_img)
         self.comboBox.activated.connect(self.clear_text)
-        self.status_pdf = False
+        self.status_doc = False
         self.checkpdf.stateChanged.connect(self.checked_pdf)
 
     def checked_pdf(self):
-        self.status_pdf = self.checkpdf.isChecked()
+        self.status_doc = self.checkpdf.isChecked()
 
     def clear_text(self):
         self.text_status.setText("Жду задания...")
@@ -76,7 +79,6 @@ class Ui_mainWindow(QtWidgets.QMainWindow):
     def create_img(self):
         
         imagelist = []
-        pdf = FPDF(orientation = 'L', unit = 'mm', format='A4')
         napravlenie = self.comboBox.currentText()
         df = pd.read_csv(f"data/{napravlenie}_DB.csv")
         
@@ -114,26 +116,43 @@ class Ui_mainWindow(QtWidgets.QMainWindow):
             img.save(patch_name) 
             imagelist.append(patch_name)
         
-        if self.status_pdf == True:
+        
+        if self.status_doc == True:
+            
+            doc = docx.Document()
+            sections = doc.sections
+            for section in sections:
+                section.top_margin = Cm(0)
+                section.bottom_margin = Cm(0)
+                section.left_margin = Cm(1)
+                section.right_margin = Cm(0)
+            
             for image in imagelist:
-                pdf.add_page()
-                pdf.image(image, 0, 0, 297, 210)
-            pdf.output(f"pdf/{napravlenie}.pdf", "F")
+                doc.add_picture(image, width=Cm(19.6), height=Cm(13.6))
+            
+
+            doc.save(f'doc/{napravlenie}.docx')
+        
         self.text_status.setText("Готово!")
 
 
 if __name__ == "__main__":
+    
     import sys
+    
     check = os.path.exists('pictures')
     if check == False:
         os.mkdir("pictures")
-    check = os.path.exists('pdf')
+    check = os.path.exists('doc')
     if check == False:
-        os.mkdir("pdf")
+        os.mkdir("doc")
+    
     app = QtWidgets.QApplication(sys.argv)
     mainWindow = QtWidgets.QMainWindow()
     apply_stylesheet(app, theme='dark_blue.xml')
+    
     ui = Ui_mainWindow()
     ui.setupUi(mainWindow)
+    
     mainWindow.show()
     sys.exit(app.exec_())
