@@ -6,7 +6,7 @@ import pandas as pd
 import os
 import datetime
 import docx
-
+import threading
 
 class Ui_mainWindow(QtWidgets.QMainWindow):
     
@@ -63,7 +63,7 @@ class Ui_mainWindow(QtWidgets.QMainWindow):
             self.tr('SA'),
         ]
         self.comboBox.addItems(list1)
-        self.pushButton.clicked.connect(self.create_img)
+        self.pushButton.clicked.connect(self.start_create_img)
         self.comboBox.activated.connect(self.clear_text)
         self.status_doc = False
         self.checkpdf.stateChanged.connect(self.checked_pdf)
@@ -120,14 +120,17 @@ class Ui_mainWindow(QtWidgets.QMainWindow):
         if self.status_doc == True: 
             self.save_doc(imagelist, napravlenie)
         self.text_status.setText("Готово!")
+    
+
+    def start_create_img(self):
+        thread = threading.Thread(target=self.create_img)
+        thread.start()
 
 def main():
     import sys
-    check = os.path.exists('pictures')
-    if check == False:
+    if os.path.exists('pictures') == False:
         os.mkdir("pictures")
-    check = os.path.exists('doc')
-    if check == False:
+    if os.path.exists('doc') == False:
         os.mkdir("doc")
     app = QtWidgets.QApplication(sys.argv)
     mainWindow = QtWidgets.QMainWindow()
