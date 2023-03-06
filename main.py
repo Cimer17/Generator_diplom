@@ -37,7 +37,7 @@ class Example(QWidget):
     def on_click(self):
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog
-        file, _ = QFileDialog.getOpenFileName(self, "Выбрать файл", "", "Microsoft Word (*.docx *.doc)", options=options)
+        file, _ = QFileDialog.getOpenFileName(self, "Выбрать файл", "", "Microsoft Word (*.docx)", options=options)
         if file:
             self.file_path = file
 
